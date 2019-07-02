@@ -1,30 +1,36 @@
 # -*- coding:utf-8 -*-
-import json
+import pickle
+import time
 import typing
+
 # from yct_task import my_customer,my_product
 # from yct_task_two import my_product
-from handle_data import tasks
 import mitmproxy.addonmanager
 import mitmproxy.connections
 import mitmproxy.http
 import mitmproxy.log
+import mitmproxy.proxy.protocol
 import mitmproxy.tcp
 import mitmproxy.websocket
-import mitmproxy.proxy.protocol
-import pickle
-import time
+
 from handle_data.main import handle_data
 
-filter_info={'http_connect':['sh.gov.cn']}
+filter_info = {'http_connect': ['yct.sh.gov.cn']}
+
+
 class classification_deal:
     '''定义一个基类通过配置处理消息'''
-    def filter_deal(self,flow):
+
+    def filter_deal(self, flow):
         pass
-    def other_dealdatabag(self,flow):
+
+    def other_dealdatabag(self, flow):
         pass
-    def yct_dealdatabag(self,flow):
+
+    def yct_dealdatabag(self, flow):
         pass
-    def run_celery(self,data):
+
+    def run_celery(self, data):
         pass
 
 
@@ -38,6 +44,7 @@ class Proxy(classification_deal):
             HTTP handler events. CONNECT requests are only valid in regular and
             upstream proxy modes.
         """
+
     def requestheaders(self, flow: mitmproxy.http.HTTPFlow):
         """
             HTTP request headers were successfully read. At this point, the body
@@ -51,7 +58,6 @@ class Proxy(classification_deal):
         """
         # request_header=eval(dict(flow.request.headers)['request_header'])
         '''获取请求详细信息'''
-
 
     def responseheaders(self, flow: mitmproxy.http.HTTPFlow):
         """
@@ -76,13 +82,16 @@ class Proxy(classification_deal):
         #        data_dict = self.yct_dealdatabag(flow)
         #        break
         #    else:
+        if 'yct.sh' not in flow.request.url:
+            return
+        # print(flow.request.url)
         data_dict = self.other_dealdatabag(flow)
         #        break
         pickled = pickle.dumps(data_dict)
         data_str = str(pickled)
         self.run_celery(data_str)
 
-    def other_dealdatabag(self,flow):
+    def other_dealdatabag(self, flow):
         data_bag = {}
         # data_bag['client_address'] = flow.client_conn.address
         data_bag['request'] = flow.request
@@ -93,7 +102,7 @@ class Proxy(classification_deal):
         data_bag['response'] = flow.response
         return data_bag
 
-    def yct_dealdatabag(self,flow):
+    def yct_dealdatabag(self, flow):
         data_bag = {}
         # data_bag['client_address'] = flow.client_conn.address
         data_bag['request'] = flow.request
@@ -104,16 +113,14 @@ class Proxy(classification_deal):
         data_bag['response'] = flow.response
         return data_bag
 
-
-    def run_celery(self,data_str):
-        #这个地方调用任务to_product
+    def run_celery(self, data_str):
+        # 这个地方调用任务to_product
         handle_data(data_str)
         # folder=open(r'D:\data_bag_pickle\{}.pkl'.format(time.time()),mode='wb')
         # pickle.dump(data_bag,folder)
         # folder.close()
 
         # print(res)
-
 
     def error(self, flow: mitmproxy.http.HTTPFlow):
         """

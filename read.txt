@@ -1,0 +1,21 @@
+小胡业务逻辑
+
+关键是analysis_data = Analysis_data(data_str, name) 解析数据的地方
+name是存入redis中的唯一表示id    http包中的请求对象 str类型
+request = data_dict.get('request') 获取请求的对象
+
+
+parameters = handel_parameter(parameters_dict, data_dict.get('to_server'))
+
+if data:
+    is_del = data.pop('delete_set')
+    if is_del:  # 判断是否删除记录
+        save_to_analysis.del_set(data)
+    else:
+        save_to_analysis.insert_new(data)
+return data
+
+
+
+
+

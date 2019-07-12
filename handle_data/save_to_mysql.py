@@ -55,11 +55,11 @@ class Save_to_sql():
                         self.table.filter_by(registerAppNo=registerAppNo).update(upinfo)
                         yctAppNo = infodata.get('yctAppNo')
                         self.table.filter_by(yctAppNo=yctAppNo).update(upinfo)
-                        db.commit()
-                        return
-                break
+                    db.commit()
+                    return
+                else:
+                    break
             except pymysql.OperationalError as e:
-                print('62')
                 db.rollback()
                 self.table = db.entity('yctformdata')
                 continue
@@ -121,7 +121,7 @@ class Save_to_sql():
         pageName = infodata.get('pageName')
         registerAppNo = infodata.get('registerAppNo', '')
         customer_id = infodata.get('customer_id')
-        # 删除指定股东或成员的记录
+        # 删除指定股东或者成员的记录
         try:
             the_set = None
             if 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/delete' in to_server:

@@ -1,7 +1,7 @@
 ﻿# -*- coding:utf-8 -*-
 '''celery配置'''
 
-'''启动命令'''
+'''启动命令参数'''
 # celery -A handle_data worker -l info -Q to_create  -P eventlet 生产数据
 
 # celery -A handle_data worker -l info -Q to_analysis -P eventlet 解析数据

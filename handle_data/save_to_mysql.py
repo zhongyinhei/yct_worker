@@ -55,11 +55,11 @@ class Save_to_sql():
                         self.table.filter_by(registerAppNo=registerAppNo).update(upinfo)
                         yctAppNo = infodata.get('yctAppNo')
                         self.table.filter_by(yctAppNo=yctAppNo).update(upinfo)
-                        db.commit()
-                        return
-                break
+                    db.commit()
+                    return
+                else:
+                    break
             except pymysql.OperationalError as e:
-                print('62')
                 db.rollback()
                 self.table = db.entity('yctformdata')
                 continue

@@ -41,7 +41,7 @@ class Save_to_sql():
             return
         if 'http://yct.sh.gov.cn/bizhallnz_yctnew/search' in to_server:  # 查询数据的不存库
             return
-
+        #保持数据库连接且中断尝试
         while True:
             try:
                 if self.table.filter_by(to_server=to_server, methods=methods, registerAppNo=registerAppNo,

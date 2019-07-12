@@ -108,6 +108,8 @@ def Analysis_data(data_str, name):
 
     # 区分不同页面的form
     page_name = filter_step(data_dict.get('to_server'))
+    if not page_name:
+        return
     analysis_data = {
         'product_id': name,
         'customer_id': '',

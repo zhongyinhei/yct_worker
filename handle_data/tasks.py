@@ -10,6 +10,9 @@ from raven import Client
 # from handle_data.rpyc_conn import rpycSer
 from handle_data.save_to_mysql import Save_to_sql
 
+import recorder
+logger=recorder.get_log().config_log('./logs/mylog.log')
+
 cli = Client('https://6bc40853ade046ebb83077e956be04d2:d862bee828d848b6882ef875baedfe8c@sentry.cicjust.com//5')
 
 # 建立redis连接池
@@ -145,8 +148,10 @@ def Analysis_data(data_str, name):
         if url in to_server:
             return
 
+    logger.info('analysis_data=%s' % analysis_data)
     # apply_form的保存，会产生公司名称和yctAppNo
     if 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/save_info' in to_server:
+        logger.info('start apply_form-save:product_id=%s' % (name))
         registerAppNo = parameters_dict.get('registerAppNo', '')
         yctAppNo = parameters_dict.get("yctAppNo", '') or parameters_dict.get('yctSocialUnit.yctAppNo', '')
         etpsName = parameters_dict.get('etpsApp.etpsName', '')
@@ -156,10 +161,15 @@ def Analysis_data(data_str, name):
         analysis_data['yctAppNo'] = yctAppNo
         analysis_data['etpsName'] = etpsName
         analysis_data['to_server'] = 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/save_info'
+        logger.info(
+            'end apply_form:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info(
+            'end apply_form:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对股东或成员的保存
     elif to_server in ['http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/save',
                        'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/member/ajax_save_member']:
+        logger.info('start investor-save&member-save:product_id=%s' % (name))
         registerAppNo = parameters_dict.get('appNo') or parameters_dict.get('etpsMember.appNo')  # 注册公司对应的唯一的appNo
         gdNo = response.text  # 股东对应的编号
         analysis_data['customer_id'] = gdNo
@@ -168,27 +178,42 @@ def Analysis_data(data_str, name):
             analysis_data['etpsName'] = r.get(registerAppNo).decode(encoding='utf-8') if isinstance(
                 r.get(registerAppNo), bytes) else r.get(registerAppNo)
             analysis_data['yctAppNo'] = ''  # 股东没有yctAppNo，置为空
+        logger.info(
+            'end investor-save&member-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info(
+            'end investor-save&member-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对股东的删除
     elif 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/delete' in to_server:
         from urllib import parse
+        logger.info('start investor-delete:product_id=%s' % (name))
         params = parse.parse_qs(parse.urlparse(to_server).query)
         gdNo = params.get('id', [])[0]
         registerAppNo = params.get('appNo', [])[0]
         analysis_data['customer_id'] = gdNo
         analysis_data['registerAppNo'] = registerAppNo
         analysis_data['delete_set'] = True
+        logger.info(
+            'end investor-save&member-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info(
+            'end investor-save&member-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对成员的删除
     elif 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/member/ajax_delete_member' in to_server:
         from urllib import parse
+        logger.info('start member-delete:product_id=%s' % (name))
         params = parse.parse_qs(parse.urlparse(to_server).query)
         gdNo = params.get('id', [])[0]
         analysis_data['customer_id'] = gdNo
         analysis_data['delete_set'] = True
+        logger.info(
+            'end member-delete:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info(
+            'end member-delete:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对其他的form的保存，前提是appNo对应apply_form已经存在库里
     else:
+        logger.info('start others-save:product_id=%s' % (name))
         yctAppNo = parameters_dict.get("yctAppNo", '') or parameters_dict.get("yctSocialUnit.yctAppNo", '')
         registerAppNo = parameters_dict.get("registerAppNo", '') or parameters_dict.get('appNo') or parameters_dict.get('etpsMember.appNo')
         if yctAppNo or registerAppNo:
@@ -201,7 +226,10 @@ def Analysis_data(data_str, name):
                 analysis_data['registerAppNo'] = registerAppNo
                 analysis_data['etpsName'] = r.get(registerAppNo).decode(encoding='utf-8') if isinstance(
                     r.get(registerAppNo), bytes) else r.get(registerAppNo)
-
+        logger.info(
+            'end others-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info(
+            'end others-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
     return analysis_data
 
 

@@ -86,11 +86,11 @@ CELERY_QUEUES = {
     },
 }
 
-OAOAOA# 给不同的任务设置不同的routers，将任务消息存放到对应的queue
+# 给不同的任务设置不同的routers，将任务消息存放到对应的queue
 CELERY_ROUTES = {
-OAOAOA    'handle_data.tasks.to_create': {'queue': 'to_create', 'routing_key': 'create'},
-OAOAOA    'handle_data.tasks.to_analysis': {'queue': 'to_analysis', 'routing_key': 'analysis'},
-    'handle_data.tasks.to_save': {'queue': 'to_save', 'routing_key': 'save'},
+'handle_data.tasks.to_create': {'queue': 'to_create', 'routing_key': 'create'},
+'handle_data.tasks.to_analysis': {'queue': 'to_analysis', 'routing_key': 'analysis'},
+'handle_data.tasks.to_save': {'queue': 'to_save', 'routing_key': 'save'},
 }
 
 

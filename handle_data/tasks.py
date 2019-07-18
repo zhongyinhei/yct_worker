@@ -11,7 +11,7 @@ from raven import Client
 from handle_data.save_to_mysql import Save_to_sql
 
 import recorder
-logger=recorder.get_log().config_log('./logs/mylog.log')
+logger=recorder.get_log().config_log('./logs/response.log')
 
 cli = Client('https://6bc40853ade046ebb83077e956be04d2:d862bee828d848b6882ef875baedfe8c@sentry.cicjust.com//5')
 

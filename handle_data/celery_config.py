@@ -1,7 +1,7 @@
-﻿# -*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 '''celery配置'''
 
-'''启动命令参数'''
+'''启动命令'''
 # celery -A handle_data worker -l info -Q to_create  -P eventlet 生产数据
 
 # celery -A handle_data worker -l info -Q to_analysis -P eventlet 解析数据
@@ -20,7 +20,7 @@ cli = Client('https://6bc40853ade046ebb83077e956be04d2:d862bee828d848b6882ef875b
 
 
 
-#SURL = "mysql+pymysql://cic_admin:TaBoq,,1234@192.168.1.170:3306/yct_proxy?charset=utf8&autocommit=true"
+# SURL = "mysql+pymysql://cic_admin:TaBoq,,1234@192.168.1.170:3306/yct_proxy?charset=utf8&autocommit=true"
 SURL = "mysql+pymysql://cic_admin:159357a@192.168.10.11:3306/yct_proxy?charset=utf8&autocommit=true"
 # SURL = "mysql+pymysql://root:GHys1234&,><@!@192.168.10.246:3306/yct_proxy?charset=utf8&autocommit=true"
 
@@ -59,11 +59,8 @@ CELERY_DEFAULT_QUEUE = "default"
 1. fanout: 广播式，它不需要指定路由就会把所有发送到该Exchange的消息路由到所有与它绑定的Queue中
 2. direct:该类型的Exchange路由规则很简单，它会把消息路由到那些binding_key与routing_key完全匹配的Queue中
 3. topic:该类型的Exchange在匹配规则上进行了扩展，它与direct类型的Exchage相似，也是将消息路由到binding key与routing_key相匹配的Queue中，但这里的匹配规则有些不同，它约定
-
     routing key为一个句点号“. ”分隔的字符串（我们将被句点号“. ”分隔开的每一段独立的字符串称为一个单词），如“*.task.*”、"*.*.email"、“*.add”
-
     binding key与routing key一样也是句点号“. ”分隔的字符串
-
     binding key中可以存在两种特殊字符“*”与“#”，用于做模糊匹配，其中“*”用于匹配一个单词，“#”用于匹配多个单词（可以是零个）
 '''
 CELERY_QUEUES = {
@@ -91,9 +88,9 @@ CELERY_QUEUES = {
 
 # 给不同的任务设置不同的routers，将任务消息存放到对应的queue
 CELERY_ROUTES = {
-    'handle_data.tasks.to_create': {'queue': 'to_create', 'routing_key': 'create'},
-    'handle_data.tasks.to_analysis': {'queue': 'to_analysis', 'routing_key': 'analysis'},
-    'handle_data.tasks.to_save': {'queue': 'to_save', 'routing_key': 'save'},
+'handle_data.tasks.to_create': {'queue': 'to_create', 'routing_key': 'create'},
+'handle_data.tasks.to_analysis': {'queue': 'to_analysis', 'routing_key': 'analysis'},
+'handle_data.tasks.to_save': {'queue': 'to_save', 'routing_key': 'save'},
 }
 
 
@@ -112,8 +109,8 @@ CELERY_ACKS_LATE = True
 CELERY_MESSAGE_COMPRESSION = 'zlib'
 # 规定完成任务的时间,在5s内完成任务，否则执行该任务的worker将被杀死，任务移交给父进程
 CELERYD_TASK_TIME_LIMIT = 5  
-# celery worker 每次去rabbitmq预取任务的数量
+OAOAOA# celery worker 每次去rabbitmq预取任务的数量
 CELERYD_PREFETCH_MULTIPLIER = 4
 # 每个worker执行了多少任务就会死掉，默认是无限的
 CELERYD_MAX_TASKS_PER_CHILD = 40
-'''
+OAOAOA'''

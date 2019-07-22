@@ -114,7 +114,8 @@ def Analysis_data(data_str, name):
     if not page_name:
         return
     analysis_data = {
-        'product_id': name,
+        # 'product_id': name,
+        'product_id': request.product_id,
         'customer_id': '',
         'methods': request.method,
         'web_name': data_dict.get('web_name'),

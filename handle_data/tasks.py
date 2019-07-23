@@ -162,10 +162,8 @@ def Analysis_data(data_str, name):
         analysis_data['yctAppNo'] = yctAppNo
         analysis_data['etpsName'] = etpsName
         analysis_data['to_server'] = 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/save_info'
-        logger.info(
-            'end apply_form:product_id=%s analysis_data=%s ' % (name, analysis_data))
-        logger.info(
-            'end apply_form:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
+        logger.info('end apply_form:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info('end apply_form:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对股东或成员的保存
     elif to_server in ['http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/save',
@@ -179,10 +177,8 @@ def Analysis_data(data_str, name):
             analysis_data['etpsName'] = r.get(registerAppNo).decode(encoding='utf-8') if isinstance(
                 r.get(registerAppNo), bytes) else r.get(registerAppNo)
             analysis_data['yctAppNo'] = ''  # 股东没有yctAppNo，置为空
-        logger.info(
-            'end investor-save&member-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
-        logger.info(
-            'end investor-save&member-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
+        logger.info('end investor-save&member-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info('end investor-save&member-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对股东的删除
     elif 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/delete' in to_server:
@@ -194,10 +190,8 @@ def Analysis_data(data_str, name):
         analysis_data['customer_id'] = gdNo
         analysis_data['registerAppNo'] = registerAppNo
         analysis_data['delete_set'] = True
-        logger.info(
-            'end investor-save&member-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
-        logger.info(
-            'end investor-save&member-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
+        logger.info('end investor-save&member-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info('end investor-save&member-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对成员的删除
     elif 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/member/ajax_delete_member' in to_server:
@@ -207,10 +201,8 @@ def Analysis_data(data_str, name):
         gdNo = params.get('id', [])[0]
         analysis_data['customer_id'] = gdNo
         analysis_data['delete_set'] = True
-        logger.info(
-            'end member-delete:product_id=%s analysis_data=%s ' % (name, analysis_data))
-        logger.info(
-            'end member-delete:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
+        logger.info('end member-delete:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info('end member-delete:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
 
     # 针对其他的form的保存，前提是appNo对应apply_form已经存在库里
     else:
@@ -227,10 +219,8 @@ def Analysis_data(data_str, name):
                 analysis_data['registerAppNo'] = registerAppNo
                 analysis_data['etpsName'] = r.get(registerAppNo).decode(encoding='utf-8') if isinstance(
                     r.get(registerAppNo), bytes) else r.get(registerAppNo)
-        logger.info(
-            'end others-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
-        logger.info(
-            'end others-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
+        logger.info('end others-save:product_id=%s analysis_data=%s ' % (name, analysis_data))
+        logger.info('end others-save:product_id=%s parameters=%s ' % (name, json.loads(parameters)))
     return analysis_data
 
 

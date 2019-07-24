@@ -40,7 +40,7 @@ RABBITMQ_PORT = 5672
 from kombu import Queue, Exchange
 
 BROKER_URL = 'amqp://cic_admin:JYcxys@3030@{}:{}/yct'.format(RABBITMQ_HOST,RABBITMQ_PORT)
-# BROKER_URL = 'amqp://cic_admin:JYcxys@3030@{}:{}/test'.format(RABBITMQ_HOST,RABBITMQ_PORT)
+# BROKER_URL = 'amqp://cic_admin:JYcxys@3030@{}:{}/xjj_test_yct'.format(RABBITMQ_HOST,RABBITMQ_PORT)
 # BROKER_URL = 'amqp://test:test@127.0.0.1:5672/test'
 # 指定结果的接受地址
 CELERY_RESULT_BACKEND = 'redis://{}:{}/15'.format(REDIS_HOST,REDIS_PORT)

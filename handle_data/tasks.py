@@ -19,6 +19,7 @@ cli = Client('https://6bc40853ade046ebb83077e956be04d2:d862bee828d848b6882ef875b
 import redis
 from handle_data.celery_config import *
 import hashlib
+import re
 
 redis_pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 r = redis.Redis(connection_pool=redis_pool)
@@ -106,7 +107,7 @@ def Analysis_data(data_str, name):
     except Exception as e:
         parameters_dict = {}
 
-    parameters = handel_parameter(parameters_dict, data_dict.get('to_server'))
+    parameters = handel_parameter(parameters_dict, data_dict.get('to_server'),response)
     if not parameters:
         return
 
@@ -242,11 +243,12 @@ form_url_dict = {
     'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/member/ajax_delete_member': 'memberform',
 
     'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/save': 'gdform',
-    'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/delete': 'gdform'
+    'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/delete': 'gdform',
+    'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/queryLocalEnty/': 'local_city_gdform'
 }
 
 
-def handel_parameter(parameter_dict, url):
+def handel_parameter(parameter_dict, url,response):
     '''拼接参数'''
     parameters = {}
     from handle_data.data_mapping import big_dict, gdlx, qylx, nsrlx, cyzw, fplx, szlx, skfws, chiefProvId, chiefCityId, \
@@ -254,9 +256,36 @@ def handel_parameter(parameter_dict, url):
     step_name = filter_step(url)
     if step_name == 'gdform':
         parameters.update(
-            gdxm=parameter_dict.get('personInvtSet', [{}])[0].get('personName', ''),  # 姓名
+            # 其他组织
+            # gdxm=parameter_dict.get('etpsOtherSet', [{}])[0].get('name', ''),# 姓名
+            # gddz=parameter_dict.get('address', ''),  # 地址
+            # 外省市企业
+            # gdxm=parameter_dict.get('etpsOutlandSet', [{}])[0].get('name', ''),# 姓名
+            # gddz=parameter_dict.get('address', ''),  # 地址
+            # 本市企业
+            # gdxm=parameter_dict.get('personInvtSet', [{}])[0].get('personName', ''),  # 姓名
+            # gddz=parameter_dict.get('address', ''),  # 地址
+            # 投资自然人
+            gdxm=parameter_dict.get('personInvtSet', [{}])[0].get('personName', '') or
+                 parameter_dict.get('etpsOtherSet', [{}])[0].get('name', '') or
+                 parameter_dict.get('etpsOutlandSet', [{}])[0].get('name', ''),  # 姓名
             gdsfz=parameter_dict.get('personInvtSet', [{}])[0].get('cetfId', ''),  # 身份证
             gddz=parameter_dict.get('address', ''),  # 地址
+            gdrj=parameter_dict.get('cptl', ''),  # 认缴金额
+            czqx=parameter_dict.get('deadlineDate', ''),  # 出资期限
+            gdlx=gdlx.get(parameter_dict.get('entityTypeId', ''), ''),  # 股东类型
+        )
+    elif step_name == 'local_city_gdform': # 从response中拿到返回数据
+        try:
+            gdxm = re.findall("etpsName:'(.*?)'", response.text)[0]
+            gddz = re.findall("address:'(.*?)'", response.text)[0]
+        except Exception as e:
+            gdxm = ''
+            gddz = ''
+        parameters.update(
+            gdxm=gdxm,  # 姓名
+            gdsfz=parameter_dict.get('personInvtSet', [{}])[0].get('cetfId', ''),  # 身份证
+            gddz=gddz,  # 地址
             gdrj=parameter_dict.get('cptl', ''),  # 认缴金额
             czqx=parameter_dict.get('deadlineDate', ''),  # 出资期限
             gdlx=gdlx.get(parameter_dict.get('entityTypeId', ''), ''),  # 股东类型

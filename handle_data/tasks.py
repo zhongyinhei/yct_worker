@@ -107,7 +107,18 @@ def Analysis_data(data_str, name):
     except Exception as e:
         parameters_dict = {}
 
-    parameters = handel_parameter(parameters_dict, data_dict.get('to_server'),response)
+    # 公司类型：其他有限责任公司     股东-出资者类型：本市企业
+    # 两次请求，第一次的数据保存在redis，第二次请求从redis中拿，拼接parameters
+    if request.url == 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/queryLocalEnty/':
+        try:
+            gdxm = re.findall("etpsName:'(.*?)'", response.text)[0]
+            uniscId = re.findall("uniscId:'(.*?)'", response.text)[0]
+        except Exception as e:
+            return
+        r.set(uniscId, gdxm, ex=3600)
+        return
+
+    parameters = handel_parameter(parameters_dict, data_dict.get('to_server'))
     if not parameters:
         return
 
@@ -154,10 +165,8 @@ def Analysis_data(data_str, name):
         if url in to_server:
             return
 
-    # logger.info('analysis_data=%s' % analysis_data)
     # apply_form的保存，会产生公司名称和yctAppNo
     if 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/save_info' in to_server:
-        logger.info('start apply_form-save:product_id=%s' % (product_id))
         registerAppNo = parameters_dict.get('registerAppNo', '')
         yctAppNo = parameters_dict.get("yctAppNo", '') or parameters_dict.get('yctSocialUnit.yctAppNo', '')
         etpsName = parameters_dict.get('etpsApp.etpsName', '')
@@ -167,13 +176,10 @@ def Analysis_data(data_str, name):
         analysis_data['yctAppNo'] = yctAppNo
         analysis_data['etpsName'] = etpsName
         analysis_data['to_server'] = 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/save_info'
-        logger.info('end apply_form:product_id=%s parameters=%s ' % (product_id, json.loads(parameters)))
-        logger.info('end apply_form:product_id=%s analysis_data=%s ' % (product_id, analysis_data))
 
     # 针对股东或成员的保存
     elif to_server in ['http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/save',
                        'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/member/ajax_save_member']:
-        logger.info('start investor-save&member-save:product_id=%s' % (product_id))
         registerAppNo = parameters_dict.get('appNo') or parameters_dict.get('etpsMember.appNo')  # 注册公司对应的唯一的appNo
         gdNo = response.text  # 股东对应的编号
         analysis_data['customer_id'] = gdNo
@@ -182,36 +188,27 @@ def Analysis_data(data_str, name):
             analysis_data['etpsName'] = r.get(registerAppNo).decode(encoding='utf-8') if isinstance(
                 r.get(registerAppNo), bytes) else r.get(registerAppNo)
             analysis_data['yctAppNo'] = ''  # 股东没有yctAppNo，置为空
-        logger.info('end investor-save&member-save:product_id=%s parameters=%s ' % (product_id, json.loads(parameters)))
-        logger.info('end investor-save&member-save:product_id=%s analysis_data=%s ' % (product_id, analysis_data))
 
     # 针对股东的删除
     elif 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/delete' in to_server:
         from urllib import parse
-        logger.info('start investor-delete:product_id=%s' % (product_id))
         params = parse.parse_qs(parse.urlparse(to_server).query)
         gdNo = params.get('id', [])[0]
         registerAppNo = params.get('appNo', [])[0]
         analysis_data['customer_id'] = gdNo
         analysis_data['registerAppNo'] = registerAppNo
         analysis_data['delete_set'] = True
-        logger.info('end investor-save&member-save:product_id=%s parameters=%s ' % (product_id, json.loads(parameters)))
-        logger.info('end investor-save&member-save:product_id=%s analysis_data=%s ' % (product_id, analysis_data))
 
     # 针对成员的删除
     elif 'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/member/ajax_delete_member' in to_server:
         from urllib import parse
-        logger.info('start member-delete:product_id=%s' % (product_id))
         params = parse.parse_qs(parse.urlparse(to_server).query)
         gdNo = params.get('id', [])[0]
         analysis_data['customer_id'] = gdNo
         analysis_data['delete_set'] = True
-        logger.info('end member-delete:product_id=%s parameters=%s ' % (product_id, json.loads(parameters)))
-        logger.info('end member-delete:product_id=%s analysis_data=%s ' % (product_id, analysis_data))
 
     # 针对其他的form的保存，前提是appNo对应apply_form已经存在库里
     else:
-        logger.info('start others-save:product_id=%s' % (product_id))
         yctAppNo = parameters_dict.get("yctAppNo", '') or parameters_dict.get("yctSocialUnit.yctAppNo", '')
         registerAppNo = parameters_dict.get("registerAppNo", '') or parameters_dict.get('appNo') or parameters_dict.get('etpsMember.appNo')
         if yctAppNo or registerAppNo:
@@ -224,8 +221,8 @@ def Analysis_data(data_str, name):
                 analysis_data['registerAppNo'] = registerAppNo
                 analysis_data['etpsName'] = r.get(registerAppNo).decode(encoding='utf-8') if isinstance(
                     r.get(registerAppNo), bytes) else r.get(registerAppNo)
-        logger.info('end others-save:product_id=%s parameters=%s ' % (product_id, json.loads(parameters)))
-        logger.info('end others-save:product_id=%s analysis_data=%s ' % (product_id, analysis_data))
+    logger.info('product_id=%s parameters=%s ' % (product_id, json.loads(parameters)))
+    logger.info('product_id=%s analysis_data=%s ' % (product_id, analysis_data))
     return analysis_data
 
 
@@ -244,17 +241,23 @@ form_url_dict = {
 
     'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/save': 'gdform',
     'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/delete': 'gdform',
-    'http://yct.sh.gov.cn/bizhallnz_yctnew/apply/investor/ajax/queryLocalEnty/': 'local_city_gdform'
 }
 
 
-def handel_parameter(parameter_dict, url,response):
+def handel_parameter(parameter_dict, url):
     '''拼接参数'''
     parameters = {}
     from handle_data.data_mapping import big_dict, gdlx, qylx, nsrlx, cyzw, fplx, szlx, skfws, chiefProvId, chiefCityId, \
         chiefDistrictId
     step_name = filter_step(url)
     if step_name == 'gdform':
+        uniscId = parameter_dict.get('uniscId', '') # 91310110350765847Q 统一社会信用码
+        if uniscId:
+            gdxm = r.get(uniscId)
+        else:
+            gdxm = parameter_dict.get('personInvtSet', [{}])[0].get('personName', '') or \
+                   parameter_dict.get('etpsOtherSet', [{}])[0].get('name', '') or \
+                   parameter_dict.get('etpsOutlandSet', [{}])[0].get('name', '')  # 姓名
         parameters.update(
             # 其他组织
             # gdxm=parameter_dict.get('etpsOtherSet', [{}])[0].get('name', ''),# 姓名
@@ -266,26 +269,9 @@ def handel_parameter(parameter_dict, url,response):
             # gdxm=parameter_dict.get('personInvtSet', [{}])[0].get('personName', ''),  # 姓名
             # gddz=parameter_dict.get('address', ''),  # 地址
             # 投资自然人
-            gdxm=parameter_dict.get('personInvtSet', [{}])[0].get('personName', '') or
-                 parameter_dict.get('etpsOtherSet', [{}])[0].get('name', '') or
-                 parameter_dict.get('etpsOutlandSet', [{}])[0].get('name', ''),  # 姓名
-            gdsfz=parameter_dict.get('personInvtSet', [{}])[0].get('cetfId', ''),  # 身份证
+            gdxm = gdxm,
+            gdsfz=parameter_dict.get('personInvtSet', [{}])[0].get('cetfId', ''), # 身份证
             gddz=parameter_dict.get('address', ''),  # 地址
-            gdrj=parameter_dict.get('cptl', ''),  # 认缴金额
-            czqx=parameter_dict.get('deadlineDate', ''),  # 出资期限
-            gdlx=gdlx.get(parameter_dict.get('entityTypeId', ''), ''),  # 股东类型
-        )
-    elif step_name == 'local_city_gdform': # 从response中拿到返回数据
-        try:
-            gdxm = re.findall("etpsName:'(.*?)'", response.text)[0]
-            gddz = re.findall("address:'(.*?)'", response.text)[0]
-        except Exception as e:
-            gdxm = ''
-            gddz = ''
-        parameters.update(
-            gdxm=gdxm,  # 姓名
-            gdsfz=parameter_dict.get('personInvtSet', [{}])[0].get('cetfId', ''),  # 身份证
-            gddz=gddz,  # 地址
             gdrj=parameter_dict.get('cptl', ''),  # 认缴金额
             czqx=parameter_dict.get('deadlineDate', ''),  # 出资期限
             gdlx=gdlx.get(parameter_dict.get('entityTypeId', ''), ''),  # 股东类型

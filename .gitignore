@@ -1,4 +1,4 @@
 logs
 test.py
 .idea/
-__pucache__/
+__pycache__/
